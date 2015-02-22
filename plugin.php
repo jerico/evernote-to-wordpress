@@ -36,10 +36,10 @@ function e2w_page() {
 
 function e2w_fetch_notes() {
 
-	global $token, $tag;
+	global $token, $searchTerm;
 	$client = new \Evernote\Client($token, false);
 
-	$search = new \Evernote\Model\Search($tag);
+	$search = new \Evernote\Model\Search($searchTerm);
 
 	$results = $client->findNotesWithSearch($search);
 
