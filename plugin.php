@@ -22,7 +22,6 @@ function e2w_page() {
 	$options = unserialize(get_option('e2w_options'));
 
 	echo '<div class="wrap">';
-	echo '<a href="admin.php?page=e2w&action=fetch" class="button">Fetch notes</a>';
 	echo '
 		<h2>Settings</h2>
 		<form method="POST" action="admin.php?page=e2w">
@@ -47,9 +46,17 @@ function e2w_page() {
 	';
 	echo '</div>';
 
+	echo '<p><a href="admin.php?page=e2w&action=test" class="button">Test Search Term</a></p>';
+
+	echo '<p><a href="admin.php?page=e2w&action=fetch" class="button">Import notes</a></p>';
+
 	if (isset($_GET['action']) && $_GET['action'] == 'fetch') {
 		e2w_fetch_notes();
 		echo "<p>Imported!</p>";
+	}
+
+	if (isset($_GET['action']) && $_GET['action'] == 'test') {
+		e2w_test_search_term();
 	}
 
 	if (isset($_POST['developerToken']) && $_POST['searchTerm']) {
@@ -98,3 +105,40 @@ function e2w_fetch_notes() {
 }
 
 
+function e2w_test_search_term() {
+
+	$options = unserialize(get_option('e2w_options'));
+
+	$token = $options['developerToken'];
+	$searchTerm = $options['searchTerm'];
+	$sandbox = true;
+
+	$client = new \Evernote\Client($token, $sandbox);
+
+	$search = new \Evernote\Model\Search($searchTerm);
+
+	$results = $client->findNotesWithSearch($search);
+
+	$c = new \Evernote\Enml\Converter\EnmlToHtmlConverter();
+
+	echo '<h3>Search Term Results</h3>';
+	echo '<pre>';
+	foreach ($results as $r) {
+		$note = $client->getNote($r->guid)->getEdamNote();
+		echo $note->title;
+		echo '<br>';
+		echo date('Y-m-d H:i:s', $note->created/1000);
+		echo '<br>';
+		echo '<br>';
+
+		$post = array(
+			'post_content' => $c->convertToHtml($note->content),
+			'post_title' => $note->title,
+			'post_date' => date('Y-m-d H:i:s', $note->created/1000),
+			'post_status' => 'publish'
+		);
+
+	}
+	echo '</pre>';
+
+}
