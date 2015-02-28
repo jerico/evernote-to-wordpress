@@ -9,3 +9,9 @@ Barebone plugin that imports Evernote notes to Wordpress depending on search ter
 - Upload as new a new plugin
 - There will be a new menu named "Evernote to Wordpress", press "Fetch notes" button
 
+## Change log
+2015-02-28
+- Ability to update $token and $searchTerm in wp-admin
+- Ability to test $searchTerm
+- Add $sandbox option
+- Ability to set update interval in wp-admin
