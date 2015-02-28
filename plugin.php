@@ -79,7 +79,7 @@ function e2w_page() {
 		$options = array(
 			'developerToken' => $_POST['developerToken'],
 			'searchTerm' => $_POST['searchTerm'],
-			'environment' => $t_POST['environment']
+			'environment' => $_POST['environment']
 		);
 
 		update_option('e2w_options', serialize($options));
