@@ -53,6 +53,16 @@ function e2w_page() {
 						</fieldset>
 					</td>
 				</tr>
+				<tr>
+					<th>Schedule</th>
+					<td>
+						<select id="schedule" name="schedule">
+							<option value="none" ' . ($options["schedule"] == "none" ? "selected" : "") . '>None</option>
+							<option value="hourly" ' . ($options["schedule"] == "hourly" ? "selected" : "") . '>Hourly</option>
+							<option value="daily" ' . ($options["schedule"] == "daily" ? "selected" : "") . '>Daily</option>
+						</select>
+					</td>
+				</tr>
 			</table>
 			<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes"></p>
 		</form>
@@ -76,10 +86,20 @@ function e2w_page() {
 		if ($options['environment']) {
 			$options['environment'] = true;
 		}
+
+		if ($options['schedule'] == 'none') {
+			$timestamp = wp_next_scheduled( 'e2w_fetch_notes' );
+			wp_unschedule_event( $timestamp, 'e2w_fetch_notes' );
+		}
+		else if (isset($options['schedule']) && $options['schedule'] != 'none') {
+			e2w_setup_schedule($options['schedule']);
+		}
+
 		$options = array(
 			'developerToken' => $_POST['developerToken'],
 			'searchTerm' => $_POST['searchTerm'],
-			'environment' => $_POST['environment']
+			'environment' => $_POST['environment'],
+			'schedule' => $_POST['schedule']
 		);
 
 		update_option('e2w_options', serialize($options));
@@ -108,8 +128,6 @@ function e2w_fetch_notes() {
 
 	foreach ($results as $r) {
 		$note = $client->getNote($r->guid)->getEdamNote();
-		echo $c->convertToHtml($note->content);
-		echo date('Y-m-d H:i:s', $note->created/1000);
 
 		$post = array(
 			'post_content' => $c->convertToHtml($note->content),
@@ -166,4 +184,12 @@ function e2w_test_search_term() {
 	}
 	echo '</pre>';
 
+}
+
+function e2w_setup_schedule($freq) {
+	$timestamp = wp_next_scheduled('e2w_fetch_notes');
+	wp_unschedule_event($timestamp, 'e2w_fetch_notes');
+	if ( ! wp_next_scheduled( 'e2w_fetch_notes' ) ) {
+		wp_schedule_event( time(), $freq, 'e2w_fetch_notes');
+	}
 }
