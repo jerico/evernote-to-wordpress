@@ -21,6 +21,10 @@ function e2w_page() {
 
 	$options = unserialize(get_option('e2w_options'));
 
+	if ($options['environment']) {
+		$options['environment'] = 'checked';
+	}
+
 	echo '<div class="wrap">';
 	echo '
 		<h2>Settings</h2>
@@ -34,10 +38,19 @@ function e2w_page() {
 					</td>
 				</tr>
 				<tr>
-					<th><label for="searchTerm">Search Term.</label></th>
+					<th><label for="searchTerm">Search Term</label></th>
 					<td>
 						<input type="text" name="searchTerm" style="width:25em" value="' . $options['searchTerm'] . '"/>
 						<p class="description"><a href="https://dev.evernote.com/doc/articles/search_grammar.php" target="_blank">Evernote Search Grammar</a></p>					</td>
+					</td>
+				</tr>
+				<tr>
+					<th>Environment</th>
+					<td>
+						<fieldset><legend class="screen-reader-text"><span>Sandbox</span></legend><label for="environment">
+							<input name="environment" type="checkbox" id="environment" value="true" ' . $options['environment'] . '>
+							Sandbox</label>
+						</fieldset>
 					</td>
 				</tr>
 			</table>
@@ -60,9 +73,13 @@ function e2w_page() {
 	}
 
 	if (isset($_POST['developerToken']) && $_POST['searchTerm']) {
+		if ($options['environment']) {
+			$options['environment'] = true;
+		}
 		$options = array(
 			'developerToken' => $_POST['developerToken'],
-			'searchTerm' => $_POST['searchTerm']
+			'searchTerm' => $_POST['searchTerm'],
+			'environment' => $t_POST['environment']
 		);
 
 		update_option('e2w_options', serialize($options));
@@ -72,10 +89,14 @@ function e2w_page() {
 function e2w_fetch_notes() {
 
 	$options = unserialize(get_option('e2w_options'));
+	$sandbox = false;
+
+	if ($options['environment']) {
+		$sandbox = true;
+	}
 
 	$token = $options['developerToken'];
 	$searchTerm = $options['searchTerm'];
-	$sandbox = true;
 
 	$client = new \Evernote\Client($token, $sandbox);
 
@@ -111,7 +132,11 @@ function e2w_test_search_term() {
 
 	$token = $options['developerToken'];
 	$searchTerm = $options['searchTerm'];
-	$sandbox = true;
+	$sandbox = false;
+
+	if ($options['environment']) {
+		$sandbox = true;
+	}
 
 	$client = new \Evernote\Client($token, $sandbox);
 
